@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\ZapWord.Client.csproj" />
+    <ProjectReference Include="..\Shared\ZapWord.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="ZapWord.Server.Interfaces" />
+    <Using Include="ZapWord.Server.Services" />
+    <Using Include="ZapWord.Server.Classes" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

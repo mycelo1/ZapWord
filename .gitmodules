@@ -1,0 +1,3 @@
+[submodule "Client/wwwroot/css/source-code-pro"]
+	path = Client/wwwroot/css/source-code-pro
+	url = https://github.com/adobe-fonts/source-code-pro
