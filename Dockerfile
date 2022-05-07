@@ -10,4 +10,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime-env
 ENV ASPNETCORE_ENVIRONMENT Production
 WORKDIR /app
 COPY --from=build-env /app/Server/bin/Release/net6.0/publish/ .
-ENTRYPOINT ["dotnet", "ZapWord.Server.dll"]
+CMD dotnet ZapWord.Server.dll --urls http://0.0.0.0:$PORT
