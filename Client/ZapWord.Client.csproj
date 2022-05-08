@@ -20,4 +20,9 @@
     <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="ZapWord.Client.Interfaces" />
+    <Using Include="ZapWord.Client.Services" />
+  </ItemGroup>
+
 </Project>

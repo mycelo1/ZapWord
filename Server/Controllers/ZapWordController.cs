@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using ZapWord.Shared.Models;
+using ZapWord.Shared.Classes;
 
 namespace ZapWord.Server.Controllers;
 
@@ -9,6 +10,8 @@ namespace ZapWord.Server.Controllers;
 public class ZapWordController : ControllerBase
 {
     private const int LETTERS = 7;
+    private const int MIN_WORD_SIZE = 3;
+    private const int MIN_WORD_COUNT = 3;
     private const string ALPHABET = "eeeeeaaaaarrrrriiiiiooooottttnnnnssssllllccccuuudddpppmmmhhhggbbffyywwkkvxzjq";
     private readonly ILogger<WeatherForecastController> _logger;
     private readonly IWordDatabase _wordDatabase;
@@ -27,7 +30,12 @@ public class ZapWordController : ControllerBase
 
     private ZapWordModel NewGame()
     {
-        var result = new ZapWordModel { WordCount = _wordDatabase.WordList.Count() };
+        var result = new ZapWordModel
+        {
+            WordCount = _wordDatabase.WordList.Count(),
+            MinWordSize = MIN_WORD_SIZE,
+            MaxWordSize = LETTERS
+        };
         var letters = new List<char>();
         var word_list = new List<string>();
         do
@@ -39,7 +47,7 @@ public class ZapWordController : ControllerBase
             {
                 letters.Add(ALPHABET[ThreadSafeRandom.Next(0, ALPHABET.Length)]);
             }
-            for (int length = 3; length <= letters.Count(); length++)
+            for (int length = MIN_WORD_SIZE; length <= letters.Count(); length++)
             {
                 var permutations = new PermutationKN(letters.Count(), length);
                 foreach (var permutation in permutations)
@@ -64,21 +72,26 @@ public class ZapWordController : ControllerBase
                     }
                 }
             }
-            if (word_list.Count() >= 3)
+            if (word_list.Count() >= MIN_WORD_COUNT)
             {
                 break;
             }
-            break;
         }
         while (true);
         foreach (var word in word_list)
         {
             var semantics = new List<ZapWordModel.Semantic>();
+            var hash_list = new HashSet<int>();
             foreach (var semantic_index in _wordDatabase.WordJoin[word.GetHashCode()])
             {
                 var (category, description) = _wordDatabase.SemanticTable[semantic_index];
-                description = Regex.Replace(description, @$"\b{word}\b", '\u2731'.ToString(), RegexOptions.IgnoreCase);
-                semantics.Add(new ZapWordModel.Semantic(category, description));
+                var description_hash = description.GetHashCode();
+                if (!hash_list.Contains(description_hash))
+                {
+                    description = Regex.Replace(description, @$"\b{word}\b", '\u2731'.ToString(), RegexOptions.IgnoreCase);
+                    semantics.Add(new ZapWordModel.Semantic(category, description));
+                    hash_list.Add(description_hash);
+                }
             }
             result.Words.Add(word, semantics);
         }

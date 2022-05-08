@@ -1,4 +1,4 @@
-namespace ZapWord.Server.Classes;
+namespace ZapWord.Shared.Classes;
 
 public class ThreadSafeRandom
 {
