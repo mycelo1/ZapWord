@@ -14,6 +14,7 @@ public class GameState : IGameState
     public WordState CurrentWordState { get { return currentWordState; } }
     public WordHint? CurrentHint { get { return currentHint; } }
     public List<string> CorrectWords { get; }
+    public List<string> MissedWords { get; }
     public event Action? GameStateChanged;
 
     private bool gameRequested;
@@ -35,6 +36,7 @@ public class GameState : IGameState
         currentWordState = WordState.ewsTyping;
         currentHint = null;
         CorrectWords = new();
+        MissedWords = new();
         availableWords = new();
     }
 
@@ -47,25 +49,40 @@ public class GameState : IGameState
     {
         gameData = await httpClient.GetFromJsonAsync<ZapWordModel>("ZapWord")!;
         availableWords.AddRange(gameData!.Words.Select(s => s.Key));
-        Shuffle();
-        NextTip();
+        ShuffleInternal();
+        NextHintInternal();
         gameActive = true;
+        gameRequested = false;
     }
 
     public async Task ResetGame()
     {
         gameActive = false;
-        gameRequested = true;
         AvailableLetters.Clear();
         TypedLetters.Clear();
         CorrectWords.Clear();
+        MissedWords.Clear();
         availableWords.Clear();
         await NewGame();
         currentWordState = WordState.ewsTyping;
         GameStateChange();
     }
 
+    public void GiveUp()
+    {
+        CorrectWords.AddRange(availableWords);
+        MissedWords.AddRange(availableWords);
+        availableWords.Clear();
+        currentWordState = WordState.ewsGameOver;
+    }
+
     public void Shuffle()
+    {
+        ShuffleInternal();
+        GameStateChange();
+    }
+
+    private void ShuffleInternal()
     {
         AvailableLetters.Clear();
         var this_shuffle = ThreadSafeRandom.Next(0, gameData!.Letters.Count());
@@ -74,10 +91,15 @@ public class GameState : IGameState
         {
             AvailableLetters.Add(letter_index++, new(letter, true));
         }
+    }
+
+    public void NextHint()
+    {
+        NextHintInternal();
         GameStateChange();
     }
 
-    public void NextTip()
+    private void NextHintInternal()
     {
         var skip = ThreadSafeRandom.Next(0, availableWords.Count());
         var word = availableWords.Skip(skip).FirstOrDefault()!;
@@ -90,6 +112,7 @@ public class GameState : IGameState
     {
         AvailableLetters[index] = AvailableLetters[index] with { Available = false };
         TypedLetters.Add(new(index, AvailableLetters[index].Letter));
+        currentWordState = WordState.ewsTyping;
         GameStateChange();
     }
 
@@ -125,9 +148,17 @@ public class GameState : IGameState
         if (availableWords.Contains(complete_word))
         {
             availableWords.Remove(complete_word);
-            CorrectWords.Add(complete_word);
-            currentWordState = gameData!.Words.Count() > 0 ? WordState.ewsTyping : WordState.ewsGameOver;
+            CorrectWords.Insert(0, complete_word);
             DeleteAllLetters();
+            if (gameData!.Words.Count() == 0)
+            {
+                currentWordState = WordState.ewsGameOver;
+            }
+            else
+            {
+                currentWordState = WordState.ewsTyping;
+                NextHintInternal();
+            }
         }
         else
         {

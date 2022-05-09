@@ -1,125 +1,194 @@
 @page "/game"
+@using BlazorPro.Spinkit
 @inject IGameState gameState
 @inject NavigationManager navigationManager
 
 <PageTitle>ZapWord</PageTitle>
 
-@if (gameState.GameActive)
-{
-    <div class="container py-2 source-code-pro" style="zoom: 0.75;">
-
-        @* AVAILABLE LETTERS *@
-        <div class="row justify-content-center py-2">
-            <div class="col-auto" style="white-space: nowrap;">
-                @* EACH CLICKABLE LETTER *@
-                @foreach (var letter in gameState.AvailableLetters)
-                {
-                    @if (letter.Value.Available)
-                    {
-                        <button type="button" class="btn btn-primary mx-1" disabled="@LetterChoiceButtonDisabled()" @onclick="(() => gameState.UseLetter(letter.Key))">
-                            @(letter.Value.Letter.ToString().ToUpper())
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn btn-outline-primary mx-1">
-                            &nbsp;
-                        </button>
-                    }
-                }
-            </div>
+<SpinLoader IsLoading="@(!gameState.GameActive)">
+    <LoadingTemplate>
+        <div class="modal-overlay">
+            <Grid Center="true" />
         </div>
+    </LoadingTemplate>
 
-        @* MAIN GAME BUTTONS *@
-        <div class="row justify-content-center py-3">
-            <div class="col-auto">
-                <div class="row flex-nowrap justify-content-center">
-                    <div class="col-auto">
-                        @* SHUFFLE BUTTON *@
-                        <button type="button" class="btn btn-info" style="width: 80px;" disabled="@ShufleButtonDisabled()" @onclick="(() => gameState.Shuffle())">
-                            <span style="font-size:large; font-weight: bolder;">
-                                &#x21c6;
-                            </span>
-                        </button>
-                    </div>
-                    <div class="col-auto">
-                        @* GAME RESET BUTTON *@
-                        <button type="button" class="btn btn-warning" style="width: 80px;" @onclick="(() => gameState.ResetGame())">
-                            <span style="font-size: large; font-weight: bolder;">
-                                &#x27f3;
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <ContentTemplate>
 
-        <div class="py-3"></div>
+        <div class="container py-2 source-code-pro" style="zoom: 1;">
 
-        @* TYPED LETTERS *@
-        @if (gameState.CurrentWordState != WordState.ewsGameOver)
-        {
-            <div class="row flex-nowrap py-2">
-
-                @* ACCEPT BUTTON *@
-                <div class="col-auto">
-                    <button type="button" class="btn btn-sm btn-dark mx-1" disabled="@WordAcceptButtonDisabled()" @onclick="(() => gameState.FinishWord())">
-                        <span style="font-weight:bolder;">
-                            &#x2714;
-                        </span>
-                    </button>
-                </div>
-
-                @* TYPING AREA *@
-                <div class="col-auto gx-0" style="white-space: nowrap;">
-                    @{
-                        var button_state = gameState.CurrentWordState switch
+            @* AVAILABLE LETTERS *@
+            <div class="row justify-content-center py-2">
+                <div class="col-auto" style="white-space: nowrap;">
+                    @* EACH CLICKABLE LETTER *@
+                    @foreach (var letter in gameState.AvailableLetters)
+                    {
+                        var button_state = (gameState.CurrentWordState == WordState.ewsGameOver ? "btn-success" : "btn-primary");
+                        @if (letter.Value.Available)
                         {
-                            WordState.ewsTyping => "btn-primary",
-                            WordState.ewsWrong => "btn-danger",
-                            _ => null
-                        };
-                    }
-
-                    @* EACH TYPED LETTER *@
-                    @foreach (var letter in gameState.TypedLetters)
-                    {
-                        <button type="button" class="btn btn-sm @button_state mx-1" @onclick="(() => gameState.DeleteLetter(letter.Index))">
-                            @(letter.Letter.ToString().ToUpper())
-                        </button>
-                    }
-
-                    @* NEXT LETTER SPACE *@
-                    @if ((gameState.CurrentWordState == WordState.ewsTyping) && (gameState.TypedLetters.Count() < gameState.GameData!.MaxWordSize))
-                    {
-                        <button type="button" class="btn btn-sm btn-outline-primary mx-1">
-                            &nbsp;
-                        </button>
+                            <button type="button" class="btn @button_state mx-1" disabled="@LetterChoiceButtonDisabled()" @onclick="(() => gameState.UseLetter(letter.Key))">
+                                @(letter.Value.Letter.ToString().ToUpper())
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-outline-primary mx-1">
+                                &nbsp;
+                            </button>
+                        }
                     }
                 </div>
             </div>
 
-            @* WORD HINT *@
-            <div class="row flex-nowrap align-items-center">
-                <div class="col-auto justify-content-end" style="font-size: xx-large;">
-                    <button type="button" class="btn btn-sm btn-primary mx-1">
-                        <span style="font-weight:bolder;">
-                            &#x21bb;
-                        </span>
-                    </button>
-                </div>
-                <div class="col-auto" style="white-space: normal; width: 85%; font-size: smaller;">
-                    <strong>noum:</strong>&nbsp;the act of agitating something; causing it to move around (usually
-                    vigorously)
+            @* MAIN GAME BUTTONS *@
+            <div class="row justify-content-center py-3">
+                <div class="col-auto">
+                    <div class="row flex-nowrap justify-content-center">
+                        <div class="col-auto">
+                            @* SHUFFLE BUTTON *@
+                            <button type="button" class="btn btn-info" style="width: 80px;" disabled="@ShuffleButtonDisabled()" @onclick="(() => gameState.Shuffle())">
+                                <span style="font-size:large; font-weight: bolder;">
+                                    &#x21c6;
+                                </span>
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            @* GIVE UP BUTTON *@
+                            <button type="button" class="btn btn-danger" style="width: 80px;" disabled="@GiveUpButtonDisabled()" @onclick="(() => gameState.GiveUp())">
+                                <span style="font-size: large; font-weight: bolder;">
+                                    &#x2690;
+                                </span>
+                            </button>
+                        </div>
+                        <div class="col-auto">
+                            @* GAME RESET BUTTON *@
+                            <button type="button" class="btn btn-warning" style="width: 80px;" @onclick="(() => gameState.ResetGame())">
+                                <span style="font-size: large; font-weight: bolder;">
+                                    &#x27f3;
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        }
-    </div>
-}
-else
-{
-    <p><em>Loading...</em></p>
-}
+
+            <div class="py-3"></div>
+
+            @* TYPED LETTERS *@
+            @if (gameState.CurrentWordState != WordState.ewsGameOver)
+            {
+                <div class="row flex-nowrap py-2">
+
+                    @* ACCEPT BUTTON *@
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-sm btn-dark mx-1" disabled="@WordAcceptButtonDisabled()" @onclick="(() => gameState.FinishWord())">
+                            <span style="font-weight:bolder;">
+                                &#x2714;
+                            </span>
+                        </button>
+                    </div>
+
+                    @* TYPING AREA *@
+                    <div class="col-auto gx-0" style="white-space: nowrap;">
+                        @{
+                            var letter_count = 0;
+                            var need_space = true;
+                            var button_state = gameState.CurrentWordState switch
+                            {
+                                WordState.ewsTyping => "btn-primary",
+                                WordState.ewsWrong => "btn-danger",
+                                _ => null
+                            };
+                        }
+
+                        @* EACH TYPED LETTER *@
+                        @foreach (var letter in gameState.TypedLetters)
+                        {
+                            letter_count++;
+                            <button type="button" class="btn btn-sm @button_state mx-1" @onclick="(() => gameState.DeleteLetter(letter.Index))">
+                                @(letter.Letter.ToString().ToUpper())
+                            </button>
+                        }
+
+                        @* CURRENT HINT SPACES *@
+                        @for (var pos = letter_count; pos < gameState.CurrentHint?.Word.Length; pos++)
+                        {
+                            need_space = false;
+                            <button type="button" class="btn btn-sm btn-outline-success mx-1">
+                                &nbsp;
+                            </button>
+                        }
+
+                        @* NEXT LETTER SPACE *@
+                        @if (need_space && (gameState.TypedLetters.Count() < gameState.GameData!.MaxWordSize))
+                        {
+                            <button type="button" class="btn btn-sm btn-outline-primary mx-1">
+                                &nbsp;
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                @* WORD HINT *@
+                <div class="row flex-nowrap align-items-center">
+                    <div class="col-auto justify-content-end" style="font-size: xx-large;">
+                        <button type="button" class="btn btn-sm btn-primary mx-1" @onclick="(() => gameState.NextHint())">
+                            <span style="font-weight:bolder;">
+                                &#x21bb;
+                            </span>
+                        </button>
+                    </div>
+                    <div class="col-auto" style="white-space: normal; width: 85%; font-size: smaller;">
+                        <strong>
+                            @(gameState.CurrentHint?.Category)
+                        </strong>
+                        :&nbsp;
+                        @(gameState.CurrentHint?.Description)
+                    </div>
+                </div>
+            }
+
+            @* LIST OF COMPLETED WORDS *@
+            @foreach (var correct_word in gameState.CorrectWords)
+            {
+                <div class="py-2"></div>
+                <div class="row flex-nowrap py-2" style="border-top: solid 2px black; border-style: dashed none none none;">
+                    <div class="col-12" style="white-space: nowrap;">
+                        @{
+                            var button_state = (gameState.MissedWords.Contains(correct_word) ? "btn-danger" : "btn-success");
+                        }
+
+                        @* EACH LETTER OF THE WORD *@
+                        @foreach (var letter in correct_word)
+                        {
+                            <button type="button" class="btn btn-sm @button_state mx-1">
+                                @(letter.ToString().ToUpper())
+                            </button>
+                        }
+                    </div>
+                </div>
+                <div class="row flex-nowrap align-items-center">
+                    <div class="col-auto">
+                        &nbsp;
+                    </div>
+                    <div class="col-auto" style="white-space: normal; width: 85%; font-size: smaller; max-height: 150pt; overflow-y: auto;">
+                        @foreach (var semantic in gameState.GameData!.Words[correct_word])
+                        {
+                            <strong>
+                                @(semantic.Category)
+                            </strong>
+                            <text>:&nbsp;</text>
+                            @(semantic.Description)
+                            <br />
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="py-3"></div>
+        </div>
+
+    </ContentTemplate>
+</SpinLoader>
 
 @code {
     protected override async Task OnInitializedAsync()
@@ -131,11 +200,14 @@ else
     }
 
     private bool LetterChoiceButtonDisabled() =>
-    (gameState.CurrentWordState != WordState.ewsTyping);
+    (gameState.CurrentWordState == WordState.ewsGameOver);
 
-    private bool ShufleButtonDisabled() =>
+    private bool ShuffleButtonDisabled() =>
     (gameState.TypedLetters.Count() > 0) ||
     (gameState.CurrentWordState != WordState.ewsTyping);
+
+    private bool GiveUpButtonDisabled() =>
+    (gameState.CurrentWordState == WordState.ewsGameOver);
 
     private bool WordAcceptButtonDisabled() =>
     (gameState.CurrentWordState != WordState.ewsTyping) ||

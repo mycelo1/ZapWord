@@ -13,10 +13,10 @@ public class ZapWordController : ControllerBase
     private const int MIN_WORD_SIZE = 3;
     private const int MIN_WORD_COUNT = 3;
     private const string ALPHABET = "eeeeeaaaaarrrrriiiiiooooottttnnnnssssllllccccuuudddpppmmmhhhggbbffyywwkkvxzjq";
-    private readonly ILogger<WeatherForecastController> _logger;
+    private readonly ILogger<ZapWordController> _logger;
     private readonly IWordDatabase _wordDatabase;
 
-    public ZapWordController(ILogger<WeatherForecastController> logger, IWordDatabase wordDatabase)
+    public ZapWordController(ILogger<ZapWordController> logger, IWordDatabase wordDatabase)
     {
         _logger = logger;
         _wordDatabase = wordDatabase;
