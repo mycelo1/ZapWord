@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
+using ZapWord.Server.Models;
+
 namespace ZapWord.Server.Interfaces;
 
 public interface IWordDatabase
 {
-    List<string> WordList { get; }
-    Dictionary<int, List<long>> WordJoin { get;}
-    Dictionary<long, (string, string)> SemanticTable { get;}
+    HashSet<string> WordList { get; }
+    ConcurrentDictionary<string, List<DictionaryApiWord>> DictionaryCache {get;}
 }

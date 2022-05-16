@@ -1,8 +1,10 @@
-var word_database = await WordDatabase.Init();
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddSingleton<IWordDatabase, WordDatabase>(s => word_database);
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IWordDatabase, WordDatabase>();
+builder.Services.AddSingleton<IGameFabric, GameFabric>();
+builder.Services.AddHostedService<PeriodicService>();
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {

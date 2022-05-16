@@ -15,6 +15,7 @@ public class GameState : IGameState
     public WordHint? CurrentHint { get { return currentHint; } }
     public List<string> CorrectWords { get; }
     public List<string> MissedWords { get; }
+    public int Progress { get { return GetProgress(); } }
     public event Action? GameStateChanged;
 
     private bool gameRequested;
@@ -165,5 +166,17 @@ public class GameState : IGameState
             currentWordState = WordState.ewsWrong;
         }
         GameStateChange();
+    }
+
+    private int GetProgress()
+    {
+        if (currentWordState == WordState.ewsGameOver)
+        {
+            return 100;
+        }
+        else
+        {
+            return (int)Math.Round((double)(CorrectWords.Count()) / (double)(availableWords.Count() + CorrectWords.Count()) * 100);
+        }
     }
 }

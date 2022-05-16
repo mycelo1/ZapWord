@@ -1,5 +1,6 @@
 @page "/game"
 @using BlazorPro.Spinkit
+@using Radzen.Blazor
 @inject IGameState gameState
 @inject NavigationManager navigationManager
 
@@ -16,8 +17,15 @@
 
         <div class="container py-2 source-code-pro" style="zoom: 1;">
 
-            @* AVAILABLE LETTERS *@
+            @* PROGRESS BAR *@
             <div class="row justify-content-center py-2">
+                <div class="col-6 col-offset-3">
+                    <RadzenProgressBar ShowValue="false" Value="@(gameState.Progress)" />
+                </div>
+            </div>
+
+            @* AVAILABLE LETTERS *@
+            <div class="row justify-content-center py-3">
                 <div class="col-auto" style="white-space: nowrap;">
                     @* EACH CLICKABLE LETTER *@
                     @foreach (var letter in gameState.AvailableLetters)
@@ -44,27 +52,31 @@
                 <div class="col-auto">
                     <div class="row flex-nowrap justify-content-center">
                         <div class="col-auto">
-                            @* SHUFFLE BUTTON *@
-                            <button type="button" class="btn btn-info" style="width: 80px;" disabled="@ShuffleButtonDisabled()" @onclick="(() => gameState.Shuffle())">
-                                <span style="font-size:large; font-weight: bolder;">
-                                    &#x21c6;
-                                </span>
-                            </button>
+                            @if (gameState.TypedLetters.Count() == 0)
+                            {
+                                @* SHUFFLE BUTTON *@
+                                <button type="button" class="btn btn-info" style="width: 80px;" disabled="@ShuffleButtonDisabled()" @onclick="(() => gameState.Shuffle())">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                @* ACCEPT BUTTON *@
+                                <button type="button" class="btn btn-success" style="width: 80px;" disabled="@WordAcceptButtonDisabled()" @onclick="(() => gameState.FinishWord())">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                </button>
+                            }
                         </div>
                         <div class="col-auto">
                             @* GIVE UP BUTTON *@
                             <button type="button" class="btn btn-danger" style="width: 80px;" disabled="@GiveUpButtonDisabled()" @onclick="(() => gameState.GiveUp())">
-                                <span style="font-size: large; font-weight: bolder;">
-                                    &#x2690;
-                                </span>
+                                <i class="fa-solid fa-flag"></i>
                             </button>
                         </div>
                         <div class="col-auto">
                             @* GAME RESET BUTTON *@
                             <button type="button" class="btn btn-warning" style="width: 80px;" @onclick="(() => gameState.ResetGame())">
-                                <span style="font-size: large; font-weight: bolder;">
-                                    &#x27f3;
-                                </span>
+                                <i class="fa-solid fa-rotate"></i>
                             </button>
                         </div>
                     </div>
@@ -78,17 +90,8 @@
             {
                 <div class="row flex-nowrap py-2">
 
-                    @* ACCEPT BUTTON *@
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-sm btn-dark mx-1" disabled="@WordAcceptButtonDisabled()" @onclick="(() => gameState.FinishWord())">
-                            <span style="font-weight:bolder;">
-                                &#x2714;
-                            </span>
-                        </button>
-                    </div>
-
                     @* TYPING AREA *@
-                    <div class="col-auto gx-0" style="white-space: nowrap;">
+                    <div class="col-auto" style="white-space: nowrap;">
                         @{
                             var letter_count = 0;
                             var need_space = true;
@@ -170,8 +173,10 @@
                     <div class="col-auto">
                         &nbsp;
                     </div>
+
+                    @* DEFINITIONS *@
                     <div class="col-auto" style="white-space: normal; width: 85%; font-size: smaller; max-height: 150pt; overflow-y: auto;">
-                        @foreach (var semantic in gameState.GameData!.Words[correct_word])
+                        @foreach (var semantic in gameState.GameData!.Words[correct_word].OrderBy(s => s.Category))
                         {
                             <strong>
                                 @(semantic.Category)

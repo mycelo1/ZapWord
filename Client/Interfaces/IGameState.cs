@@ -13,6 +13,7 @@ public interface IGameState
     WordHint? CurrentHint { get; }
     List<string> CorrectWords { get; }
     List<string> MissedWords { get; }
+    int Progress { get; }
     event Action? GameStateChanged;
     Task NewGame();
     Task ResetGame();
