@@ -1,29 +1,24 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using Microsoft.Extensions.Options;
 using ZapWord.Shared.Classes;
 using ZapWord.Shared.Models;
-using ZapWord.Server.Models;
 
 namespace ZapWord.Server.Services;
 
 public class GameFabric : IGameFabric
 {
-    private const int LETTERS = 7;
-    private const int MIN_WORD_SIZE = 3;
-    private const int MIN_WORD_COUNT = 3;
-    private const int MAX_CACHED_GAMES = 10;
-    private const int TIMEOUT_SECONDS = 60;
-    private const string ALPHABET = "eeeeeaaaaarrrrriiiiiooooottttnnnnssssllllccccuuudddpppmmmhhhggbbffyywwkkvxzjq";
-
     private readonly ILogger<IGameFabric> _logger;
+    private readonly GameOptions _gameOptions;
     private readonly IWordDatabase _wordDatabase;
     private readonly IHttpClientFactory _clientFactory;
 
     public ConcurrentQueue<ZapWordModel> GameQueue { get; } = new();
 
-    public GameFabric(ILogger<IGameFabric> logger, IWordDatabase wordDatabase, IHttpClientFactory clientFactory)
+    public GameFabric(ILogger<IGameFabric> logger, IOptions<GameOptions> options, IWordDatabase wordDatabase, IHttpClientFactory clientFactory)
     {
         _logger = logger;
+        _gameOptions = options.Value;
         _wordDatabase = wordDatabase;
         _clientFactory = clientFactory;
     }
@@ -44,7 +39,7 @@ public class GameFabric : IGameFabric
     {
         try
         {
-            if (GameQueue.Count() < MAX_CACHED_GAMES)
+            if (GameQueue.Count() < _gameOptions.MaxCachedGames)
             {
                 GameQueue.Enqueue(await GenerateGame());
             }
@@ -57,8 +52,8 @@ public class GameFabric : IGameFabric
         var result = new ZapWordModel
         {
             WordCount = _wordDatabase.WordList.Count(),
-            MinWordSize = MIN_WORD_SIZE,
-            MaxWordSize = LETTERS
+            MinWordSize = _gameOptions.MinWordSize,
+            MaxWordSize = _gameOptions.Letters
         };
         var letters = new List<char>();
         var word_list = new List<string>();
@@ -66,11 +61,11 @@ public class GameFabric : IGameFabric
         _logger.LogInformation("generating new game");
         do
         {
-            for (var index = 0; index < LETTERS; index++)
+            for (var index = 0; index < _gameOptions.Letters; index++)
             {
-                letters.Add(ALPHABET[ThreadSafeRandom.Next(0, ALPHABET.Length)]);
+                letters.Add(_gameOptions.LetterPool[ThreadSafeRandom.Next(0, _gameOptions.LetterPool.Length)]);
             }
-            for (int length = MIN_WORD_SIZE; length <= letters.Count(); length++)
+            for (int length = _gameOptions.MinWordSize; length <= letters.Count(); length++)
             {
                 var permutations = new PermutationKN(letters.Count(), length);
                 foreach (var permutation in permutations)
@@ -102,7 +97,7 @@ public class GameFabric : IGameFabric
                     using var httpClient = _clientFactory.CreateClient();
                     try
                     {
-                        var response = await httpClient.GetFromJsonAsync<List<DictionaryApiWord>>($"https://api.dictionaryapi.dev/api/v2/entries/en/{word}");
+                        var response = await httpClient.GetFromJsonAsync<List<DictionaryApiWord>>(String.Format(_gameOptions.DictionaryApi, word));
                         _wordDatabase.DictionaryCache.TryAdd(word, response!);
                     }
                     catch (HttpRequestException exception)
@@ -145,13 +140,13 @@ public class GameFabric : IGameFabric
                     result.Words.Add(word, semantics);
                 }
             }
-            if (result.Words.Count() >= MIN_WORD_COUNT)
+            if (result.Words.Count() >= _gameOptions.MinWordCount)
             {
                 break;
             }
             else
             {
-                if (stopwatch.Elapsed > TimeSpan.FromSeconds(TIMEOUT_SECONDS))
+                if (stopwatch.Elapsed > TimeSpan.FromSeconds(_gameOptions.GenerationTimeout))
                 {
                     _logger.LogWarning("took too long to generate game, giving up");
                     throw new TimeoutException();

@@ -17,8 +17,9 @@
 
   <ItemGroup>
     <Using Include="ZapWord.Server.Interfaces" />
-    <Using Include="ZapWord.Server.Services" />
     <Using Include="ZapWord.Server.Classes" />
+    <Using Include="ZapWord.Server.Services" />
+    <Using Include="ZapWord.Server.Models" />
   </ItemGroup>
 
   <ItemGroup>

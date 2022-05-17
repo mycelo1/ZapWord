@@ -1,21 +1,24 @@
+using Microsoft.Extensions.Options;
+
 namespace ZapWord.Server.Services;
 
 public class PeriodicService : IHostedService, IDisposable
 {
-    private const int TIMER_SECONDS = 60;
-    private readonly ILogger<PeriodicService> _logger;
-    private readonly IGameFabric _gameFabric;
     private Timer _timer = null!;
+    private readonly ILogger<PeriodicService> _logger;
+    private readonly GameOptions _gameOptions;
+    private readonly IGameFabric _gameFabric;
 
-    public PeriodicService(ILogger<PeriodicService> logger, IGameFabric gameFabric)
+    public PeriodicService(ILogger<PeriodicService> logger, IOptions<GameOptions> options, IGameFabric gameFabric)
     {
         _logger = logger;
+        _gameOptions = options.Value;
         _gameFabric = gameFabric;
     }
 
     public Task StartAsync(CancellationToken stoppingToken)
     {
-        _timer = new Timer(async s => await DoWork(s), null, TimeSpan.Zero, TimeSpan.FromSeconds(TIMER_SECONDS));
+        _timer = new Timer(async s => await DoWork(s), null, TimeSpan.Zero, TimeSpan.FromSeconds(_gameOptions.GenerationInterval));
         return Task.CompletedTask;
     }
 
