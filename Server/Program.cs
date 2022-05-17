@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddResponseCompression(options => options.EnableForHttps = true );
 builder.Services.AddHttpClient();
 builder.Services.Configure<GameOptions>(builder.Configuration.GetSection(GameOptions.Section));
 builder.Services.AddSingleton<IWordDatabase, WordDatabase>();
@@ -25,6 +26,7 @@ else
     app.UseHttpsRedirection();
     app.UseHsts();
 }
+app.UseResponseCompression();
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 app.UseRouting();
