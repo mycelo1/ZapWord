@@ -24,6 +24,6 @@ public class ZapWordController : ControllerBase
 
     private async Task<ZapWordModel> NewGame()
     {
-        return await _gameFabric.GetGame();
+        return await _gameFabric.GameGet();
     }
 }

@@ -11,19 +11,19 @@ public class GameFabric : IGameFabric
     private readonly ILogger<IGameFabric> _logger;
     private readonly GameOptions _gameOptions;
     private readonly IWordDatabase _wordDatabase;
-    private readonly IHttpClientFactory _clientFactory;
+    private readonly IWordDictionary _wordDictionary;
 
     public ConcurrentQueue<ZapWordModel> GameQueue { get; } = new();
 
-    public GameFabric(ILogger<IGameFabric> logger, IOptions<GameOptions> options, IWordDatabase wordDatabase, IHttpClientFactory clientFactory)
+    public GameFabric(ILogger<IGameFabric> logger, IOptions<GameOptions> options, IWordDatabase wordDatabase, IWordDictionary wordDictionary)
     {
         _logger = logger;
         _gameOptions = options.Value;
         _wordDatabase = wordDatabase;
-        _clientFactory = clientFactory;
+        _wordDictionary = wordDictionary;
     }
 
-    public async Task<ZapWordModel> GetGame()
+    public async Task<ZapWordModel> GameGet()
     {
         if (GameQueue.TryDequeue(out var result))
         {
@@ -35,7 +35,7 @@ public class GameFabric : IGameFabric
         }
     }
 
-    public async Task EnqueueGame()
+    public async Task GameEnqueue()
     {
         try
         {
@@ -51,7 +51,6 @@ public class GameFabric : IGameFabric
     {
         var result = new ZapWordModel
         {
-            WordCount = _wordDatabase.WordList.Count(),
             MinWordSize = _gameOptions.MinWordSize,
             MaxWordSize = _gameOptions.Letters
         };
@@ -77,7 +76,7 @@ public class GameFabric : IGameFabric
                     }
                     var candidate_chars_array = candidate_chars.ToArray();
                     var candidate_string = new String(candidate_chars_array);
-                    if (_wordDatabase.WordList.Contains(candidate_string))
+                    if (_wordDatabase.WordList.BinarySearch(candidate_string) >= 0)
                     {
                         if (word_list.IndexOf(candidate_string) < 0)
                         {
@@ -90,29 +89,11 @@ public class GameFabric : IGameFabric
                     }
                 }
             }
-            foreach (var word in word_list)
-            {
-                if (!_wordDatabase.DictionaryCache.ContainsKey(word))
-                {
-                    using var httpClient = _clientFactory.CreateClient();
-                    try
-                    {
-                        var response = await httpClient.GetFromJsonAsync<List<DictionaryApiWord>>(String.Format(_gameOptions.DictionaryApi, word));
-                        _wordDatabase.DictionaryCache.TryAdd(word, response!);
-                    }
-                    catch (HttpRequestException exception)
-                    {
-                        if (exception.StatusCode != System.Net.HttpStatusCode.NotFound)
-                        {
-                            _logger.LogWarning(exception, nameof(GenerateGame));
-                        }
-                    }
-                }
-            }
             foreach (var word in word_list.OrderBy(s => s.Length).ThenBy(s => s))
             {
                 var semantics = new List<ZapWordModel.Semantic>();
-                if (_wordDatabase.DictionaryCache.TryGetValue(word, out var dictionary))
+                List<DictionaryApiWord>? dictionary;
+                if ((dictionary = await _wordDictionary.WordFetch(word)) is not null)
                 {
                     foreach (var variant in dictionary!)
                     {

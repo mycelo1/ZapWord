@@ -6,6 +6,6 @@ namespace ZapWord.Server.Interfaces;
 public interface IGameFabric
 {
     ConcurrentQueue<ZapWordModel> GameQueue { get; }
-    Task<ZapWordModel> GetGame();
-    Task EnqueueGame();
+    Task<ZapWordModel> GameGet();
+    Task GameEnqueue();
 }

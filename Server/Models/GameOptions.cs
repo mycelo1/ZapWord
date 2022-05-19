@@ -7,8 +7,10 @@ public class GameOptions
     public int MinWordSize { get; set; }
     public int MinWordCount { get; set; }
     public int MaxCachedGames { get; set; }
+    public int MaxCachedWords { get; set; }
     public int GenerationTimeout { get; set; }
     public int GenerationInterval { get; set; }
+    public int CacheCleaningInterval { get; set; }
     public string LetterPool { get; set; } = String.Empty;
     public string DictionaryApi { get; set; } = String.Empty;
 }

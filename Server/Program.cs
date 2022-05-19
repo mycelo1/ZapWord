@@ -7,13 +7,15 @@ builder.Services.AddResponseCompression(options => options.EnableForHttps = true
 builder.Services.AddHttpClient();
 builder.Services.Configure<GameOptions>(builder.Configuration.GetSection(GameOptions.Section));
 builder.Services.AddSingleton<IWordDatabase, WordDatabase>();
+builder.Services.AddSingleton<IWordDictionary, WordDictionary>();
 builder.Services.AddSingleton<IGameFabric, GameFabric>();
-builder.Services.AddHostedService<PeriodicService>();
+builder.Services.AddHostedService<PeriodicServices>();
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
         ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
