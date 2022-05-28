@@ -1,6 +1,6 @@
 namespace ZapWord.Shared.Models;
 
-public class ZapWordModel
+public record class ZapWordModel
 {
     public int WordCount { get; set; }
     public int MinWordSize { get; set; }

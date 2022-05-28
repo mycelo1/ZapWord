@@ -14,7 +14,7 @@ public interface IGameState
     List<string> CorrectWords { get; }
     List<string> MissedWords { get; }
     int Progress { get; }
-    event Action? GameStateChanged;
+    event EventHandler? GameStateChanged;
     Task NewGame();
     Task ResetGame();
     void GiveUp();

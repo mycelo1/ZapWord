@@ -6,5 +6,5 @@ namespace ZapWord.Server.Interfaces;
 public interface IWordDatabase
 {
     ImmutableList<string> WordList { get; }
-    ConcurrentDictionary<string, List<DictionaryApiWord>> DictionaryCache {get;}
+    ConcurrentDictionary<string, List<DictionaryApiWord>> DictionaryCache { get; }
 }

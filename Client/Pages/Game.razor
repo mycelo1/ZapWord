@@ -28,13 +28,14 @@
             <div class="row justify-content-center py-3">
                 <div class="col-auto" style="white-space: nowrap;">
                     @* EACH CLICKABLE LETTER *@
-                    @foreach (var letter in gameState.AvailableLetters)
+                    @foreach (var letter_item in gameState.AvailableLetters)
                     {
                         var button_state = (gameState.CurrentWordState == WordState.ewsGameOver ? "btn-success" : "btn-primary");
-                        @if (letter.Value.Available)
+                        var (letter, available) = letter_item.Value;
+                        @if (available)
                         {
-                            <button type="button" class="btn @button_state mx-1" disabled="@LetterChoiceButtonDisabled()" @onclick="(() => gameState.UseLetter(letter.Key))">
-                                @(letter.Value.Letter.ToString().ToUpper())
+                            <button type="button" class="btn @button_state mx-1" disabled="@LetterChoiceButtonDisabled()" @onclick="(() => gameState.UseLetter(letter_item.Key))">
+                                @(letter.ToString().ToUpper())
                             </button>
                         }
                         else
